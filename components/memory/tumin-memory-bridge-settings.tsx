@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { Archive, Clock, Link2, Sparkles } from "lucide-react";
 import { Toggle } from "@/components/ui/form";
 import { loadMemoryConfig, saveMemoryConfig } from "@/lib/memory-storage";
@@ -38,7 +38,7 @@ export function TuminMemoryBridgeSettings() {
             <p className="menu-group-desc mx-2">记忆互通</p>
             <div className="menu-group">
                 <div className="menu-item">
-                    <span className="card-icon" style={{ "--icon-color": BINDING_ACCENTS.memory } as React.CSSProperties}>
+                    <span className="card-icon" style={{ "--icon-color": BINDING_ACCENTS.memory } as CSSProperties}>
                         <Link2 size={22} strokeWidth={1.75} />
                     </span>
                     <div className="menu-label-group">
@@ -54,7 +54,7 @@ export function TuminMemoryBridgeSettings() {
             <p className="menu-group-desc mx-2">短期上下文</p>
             <div className="menu-group">
                 <div className="menu-item">
-                    <span className="card-icon" style={{ "--icon-color": BINDING_ACCENTS.voice } as React.CSSProperties}>
+                    <span className="card-icon" style={{ "--icon-color": BINDING_ACCENTS.voice } as CSSProperties}>
                         <Clock size={22} strokeWidth={1.75} />
                     </span>
                     <div className="menu-label-group">
@@ -69,7 +69,7 @@ export function TuminMemoryBridgeSettings() {
                     </div>
                 </div>
                 <div className="menu-item">
-                    <span className="card-icon" style={{ "--icon-color": BINDING_ACCENTS.voice } as React.CSSProperties}>
+                    <span className="card-icon" style={{ "--icon-color": BINDING_ACCENTS.voice } as CSSProperties}>
                         <Clock size={22} strokeWidth={1.75} />
                     </span>
                     <div className="menu-label-group">
@@ -136,7 +136,7 @@ export function TuminMemoryBridgeSettings() {
             <p className="menu-group-desc mx-2">长期记忆</p>
             <div className="menu-group">
                 <div className="menu-item">
-                    <span className="card-icon" style={{ "--icon-color": BINDING_ACCENTS.memory } as React.CSSProperties}>
+                    <span className="card-icon" style={{ "--icon-color": BINDING_ACCENTS.memory } as CSSProperties}>
                         <Archive size={22} strokeWidth={1.75} />
                     </span>
                     <div className="menu-label-group">
@@ -151,7 +151,7 @@ export function TuminMemoryBridgeSettings() {
                     </div>
                 </div>
                 <div className="menu-item">
-                    <span className="card-icon" style={{ "--icon-color": BINDING_ACCENTS.memory } as React.CSSProperties}>
+                    <span className="card-icon" style={{ "--icon-color": BINDING_ACCENTS.memory } as CSSProperties}>
                         <Archive size={22} strokeWidth={1.75} />
                     </span>
                     <div className="menu-label-group">
@@ -166,7 +166,7 @@ export function TuminMemoryBridgeSettings() {
                     </div>
                 </div>
                 <div className="menu-item">
-                    <span className="card-icon" style={{ "--icon-color": BINDING_ACCENTS.embedding } as React.CSSProperties}>
+                    <span className="card-icon" style={{ "--icon-color": BINDING_ACCENTS.embedding } as CSSProperties}>
                         <Sparkles size={22} strokeWidth={1.75} />
                     </span>
                     <div className="menu-label-group">
