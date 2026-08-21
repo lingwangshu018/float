@@ -12,6 +12,8 @@ export type TuminMemoryBridgeConfig = {
     allowFloatReadTuminLongTerm: boolean;
     allowTuminReadFloatLongTerm: boolean;
     autoSyncImportantLongTerm: boolean;
+    /** Float characterId -> Tumin assistantId. Never infer by display name. */
+    characterBindings: Record<string, string>;
 };
 
 export const DEFAULT_TUMIN_MEMORY_BRIDGE_CONFIG: TuminMemoryBridgeConfig = {
@@ -22,6 +24,7 @@ export const DEFAULT_TUMIN_MEMORY_BRIDGE_CONFIG: TuminMemoryBridgeConfig = {
     allowFloatReadTuminLongTerm: true,
     allowTuminReadFloatLongTerm: true,
     autoSyncImportantLongTerm: false,
+    characterBindings: {},
 };
 
 const CONFIG_KEY = "ai_phone_tumin_bridge_config_v1";
@@ -32,6 +35,10 @@ function normalizeConfig(value?: Partial<TuminMemoryBridgeConfig> | null): Tumin
     return {
         ...DEFAULT_TUMIN_MEMORY_BRIDGE_CONFIG,
         ...(value ?? {}),
+        characterBindings: {
+            ...DEFAULT_TUMIN_MEMORY_BRIDGE_CONFIG.characterBindings,
+            ...(value?.characterBindings ?? {}),
+        },
     };
 }
 
@@ -62,5 +69,32 @@ export function loadTuminMemoryBridgeConfig(): TuminMemoryBridgeConfig {
 
 export function saveTuminMemoryBridgeConfig(config: TuminMemoryBridgeConfig): void {
     if (typeof window === "undefined") return;
-    kvSet(CONFIG_KEY, JSON.stringify(config));
+    kvSet(CONFIG_KEY, JSON.stringify(normalizeConfig(config)));
+}
+
+export function getBoundTuminAssistantId(characterId: string): string | null {
+    const id = loadTuminMemoryBridgeConfig().characterBindings[characterId]?.trim();
+    return id || null;
+}
+
+export function bindTuminAssistant(characterId: string, assistantId: string): TuminMemoryBridgeConfig {
+    const config = loadTuminMemoryBridgeConfig();
+    const next = {
+        ...config,
+        characterBindings: {
+            ...config.characterBindings,
+            [characterId]: assistantId.trim(),
+        },
+    };
+    saveTuminMemoryBridgeConfig(next);
+    return next;
+}
+
+export function unbindTuminAssistant(characterId: string): TuminMemoryBridgeConfig {
+    const config = loadTuminMemoryBridgeConfig();
+    const bindings = { ...config.characterBindings };
+    delete bindings[characterId];
+    const next = { ...config, characterBindings: bindings };
+    saveTuminMemoryBridgeConfig(next);
+    return next;
 }
