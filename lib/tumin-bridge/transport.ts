@@ -23,6 +23,11 @@ export type TuminBridgeLongTermItem = {
     content: string;
 };
 
+export type TuminAssistantInfo = {
+    id: string;
+    name: string;
+};
+
 export type TuminBridgeReadResult<T> = {
     success: boolean;
     kind: "recent" | "long_term";
@@ -31,9 +36,16 @@ export type TuminBridgeReadResult<T> = {
     error?: string;
 };
 
+export type TuminAssistantListResult = {
+    success: boolean;
+    assistants: TuminAssistantInfo[];
+    error?: string;
+};
+
 type TuminHostBridge = {
     memoryGetRecent?: (assistantId: string, limit?: number) => Promise<TuminBridgeReadResult<TuminBridgeRecentItem>>;
     memoryGetLongTerm?: (assistantId: string, limit?: number) => Promise<TuminBridgeReadResult<TuminBridgeLongTermItem>>;
+    memoryListAssistants?: () => Promise<TuminAssistantListResult>;
 };
 
 function getHostBridge(): TuminHostBridge | null {
@@ -43,7 +55,19 @@ function getHostBridge(): TuminHostBridge | null {
 
 export function isTuminMemoryTransportAvailable(): boolean {
     const bridge = getHostBridge();
-    return Boolean(bridge?.memoryGetRecent || bridge?.memoryGetLongTerm);
+    return Boolean(bridge?.memoryGetRecent || bridge?.memoryGetLongTerm || bridge?.memoryListAssistants);
+}
+
+export async function listTuminAssistants(): Promise<TuminAssistantListResult> {
+    const bridge = getHostBridge();
+    if (!bridge?.memoryListAssistants) {
+        return {
+            success: false,
+            assistants: [],
+            error: "Tumin assistant-list bridge is unavailable in this host",
+        };
+    }
+    return bridge.memoryListAssistants();
 }
 
 export async function readTuminRecentMemory(
