@@ -12,7 +12,7 @@ export type TuminMemoryBridgeConfig = {
     allowFloatReadTuminLongTerm: boolean;
     allowTuminReadFloatLongTerm: boolean;
     autoSyncImportantLongTerm: boolean;
-    /** Float characterId -> Tumin assistantId. Never infer by display name. */
+    /** Float characterId -> Tumin assistantId. Bindings are strictly one-to-one. */
     characterBindings: Record<string, string>;
 };
 
@@ -31,14 +31,26 @@ const CONFIG_KEY = "ai_phone_tumin_bridge_config_v1";
 const LEGACY_MEMORY_CONFIG_KEY = "ai_phone_memory_config_v1";
 registerKvMigration(CONFIG_KEY);
 
+function normalizeBindings(bindings?: Record<string, string> | null): Record<string, string> {
+    const result: Record<string, string> = {};
+    const usedAssistantIds = new Set<string>();
+
+    for (const [characterIdRaw, assistantIdRaw] of Object.entries(bindings ?? {})) {
+        const characterId = characterIdRaw.trim();
+        const assistantId = assistantIdRaw.trim();
+        if (!characterId || !assistantId || usedAssistantIds.has(assistantId)) continue;
+        result[characterId] = assistantId;
+        usedAssistantIds.add(assistantId);
+    }
+
+    return result;
+}
+
 function normalizeConfig(value?: Partial<TuminMemoryBridgeConfig> | null): TuminMemoryBridgeConfig {
     return {
         ...DEFAULT_TUMIN_MEMORY_BRIDGE_CONFIG,
         ...(value ?? {}),
-        characterBindings: {
-            ...DEFAULT_TUMIN_MEMORY_BRIDGE_CONFIG.characterBindings,
-            ...(value?.characterBindings ?? {}),
-        },
+        characterBindings: normalizeBindings(value?.characterBindings),
     };
 }
 
@@ -77,13 +89,36 @@ export function getBoundTuminAssistantId(characterId: string): string | null {
     return id || null;
 }
 
+export function getBoundFloatCharacterId(assistantId: string): string | null {
+    const target = assistantId.trim();
+    if (!target) return null;
+    const bindings = loadTuminMemoryBridgeConfig().characterBindings;
+    const match = Object.entries(bindings).find(([, boundAssistantId]) => boundAssistantId === target);
+    return match?.[0] ?? null;
+}
+
 export function bindTuminAssistant(characterId: string, assistantId: string): TuminMemoryBridgeConfig {
+    const cleanCharacterId = characterId.trim();
+    const cleanAssistantId = assistantId.trim();
+    if (!cleanCharacterId || !cleanAssistantId) {
+        throw new Error("characterId and assistantId are required");
+    }
+
     const config = loadTuminMemoryBridgeConfig();
+    const occupiedBy = Object.entries(config.characterBindings)
+        .find(([otherCharacterId, boundAssistantId]) => (
+            otherCharacterId !== cleanCharacterId && boundAssistantId === cleanAssistantId
+        ))?.[0];
+
+    if (occupiedBy) {
+        throw new Error("This Tumin assistant is already bound to another Float character");
+    }
+
     const next = {
         ...config,
         characterBindings: {
             ...config.characterBindings,
-            [characterId]: assistantId.trim(),
+            [cleanCharacterId]: cleanAssistantId,
         },
     };
     saveTuminMemoryBridgeConfig(next);
