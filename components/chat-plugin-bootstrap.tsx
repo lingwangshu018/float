@@ -6,9 +6,11 @@
 
 import { useEffect } from "react";
 import { getChatPluginRuntime } from "@/lib/chat-plugin-runtime";
+import { registerTuminMemoryPromptHook } from "@/lib/tumin-bridge/chat-hook";
 
 export function ChatPluginBootstrap() {
     useEffect(() => {
+        registerTuminMemoryPromptHook();
         void getChatPluginRuntime().ensureStarted();
     }, []);
     return null;
