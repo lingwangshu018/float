@@ -180,15 +180,7 @@ export function loadMemoryConfig(): MemoryConfig {
     try {
         const raw = kvGet(CONFIG_KEY);
         if (!raw) return { ...DEFAULT_MEMORY_CONFIG };
-        const stored = JSON.parse(raw) as Partial<MemoryConfig>;
-        return {
-            ...DEFAULT_MEMORY_CONFIG,
-            ...stored,
-            tuminBridge: {
-                ...DEFAULT_MEMORY_CONFIG.tuminBridge,
-                ...(stored.tuminBridge ?? {}),
-            },
-        };
+        return { ...DEFAULT_MEMORY_CONFIG, ...JSON.parse(raw) };
     } catch {
         return { ...DEFAULT_MEMORY_CONFIG };
     }
