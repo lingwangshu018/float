@@ -16,6 +16,16 @@ export type MemoryEntry = {
     metadata?: Record<string, unknown>;
 };
 
+export type TuminMemoryBridgeConfig = {
+    enabled: boolean;
+    allowFloatReadTuminRecent: boolean;
+    allowTuminReadFloatRecent: boolean;
+    sharedRecentContextLimit: number;
+    allowFloatReadTuminLongTerm: boolean;
+    allowTuminReadFloatLongTerm: boolean;
+    autoSyncImportantLongTerm: boolean;
+};
+
 export type MemoryConfig = {
     autoSummarizeEnabled: boolean;          // whether auto-summarization runs after N events
     autoBuildCoreEnabled: boolean;          // whether core memories rebuild after long-term summarization
@@ -29,6 +39,7 @@ export type MemoryConfig = {
     summarizationPrompt: string;            // user-editable prompt template for memory summarization
     coreMemoryPrompt: string;               // user-editable prompt template for core-memory extraction
     vnSummaryPrompt: string;                // user-editable prompt for VN chapter summarization
+    tuminBridge: TuminMemoryBridgeConfig;
     shortTermAllowedSources?: {
         chat?: boolean;
         group_chat?: boolean;
@@ -116,6 +127,15 @@ export const DEFAULT_MEMORY_CONFIG: MemoryConfig = {
     summarizationPrompt: DEFAULT_SUMMARIZATION_PROMPT,
     coreMemoryPrompt: DEFAULT_CORE_MEMORY_PROMPT,
     vnSummaryPrompt: "",
+    tuminBridge: {
+        enabled: false,
+        allowFloatReadTuminRecent: true,
+        allowTuminReadFloatRecent: true,
+        sharedRecentContextLimit: 20,
+        allowFloatReadTuminLongTerm: true,
+        allowTuminReadFloatLongTerm: true,
+        autoSyncImportantLongTerm: false,
+    },
     shortTermAllowedSources: {
         chat: true,
         group_chat: true,
