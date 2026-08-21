@@ -3,7 +3,7 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { Brain, ChevronRight, Link2, MoreHorizontal, Sparkles } from "lucide-react";
 import { MemoryBankPage } from "./memory/memory-bank-page";
-import { TuminMemoryBridgeSettings } from "./memory/tumin-memory-bridge-settings";
+import { TuminMemoryBridgeSettings } from "./tumin-bridge/tumin-memory-bridge-settings";
 import { VnAssetPage } from "./vn/vn-asset-page";
 import { loadCharacters } from "@/lib/character-storage";
 import { PageShell } from "./ui/page-shell";
