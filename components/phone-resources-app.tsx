@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { Brain, ChevronRight, Link2, MoreHorizontal, Sparkles } from "lucide-react";
 import { MemoryBankPage } from "./memory/memory-bank-page";
 import { TuminMemoryBridgeSettings } from "./memory/tumin-memory-bridge-settings";
@@ -148,7 +148,7 @@ export function PhoneResourcesApp({ onClose, onNotice, initialPage }: { onClose:
                                     >
                                         <span
                                             className="card-icon"
-                                            style={{ "--icon-color": BINDING_ACCENTS.memory } as React.CSSProperties}
+                                            style={{ "--icon-color": BINDING_ACCENTS.memory } as CSSProperties}
                                         >
                                             <Link2 size={22} strokeWidth={1.75} />
                                         </span>
