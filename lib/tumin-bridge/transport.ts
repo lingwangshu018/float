@@ -44,9 +44,31 @@ type TuminHostBridge = {
     getData?: (key: string) => Promise<string | null>;
 };
 
+type TuminFloatPortalBridge = {
+    setData?: (key: string, value: string) => boolean;
+    getData?: (key: string) => string | null;
+};
+
 function getHostBridge(): TuminHostBridge | null {
     if (typeof window === "undefined") return null;
-    return ((window as Window & { Bridge?: TuminHostBridge }).Bridge ?? null);
+
+    const hostWindow = window as Window & {
+        Bridge?: TuminHostBridge;
+        TuminFloatBridge?: TuminFloatPortalBridge;
+    };
+    if (hostWindow.Bridge) return hostWindow.Bridge;
+
+    const portal = hostWindow.TuminFloatBridge;
+    if (!portal) return null;
+
+    return {
+        getData: portal.getData
+            ? async (key: string) => portal.getData!(key)
+            : undefined,
+        setData: portal.setData
+            ? async (key: string, value: string) => portal.setData!(key, value)
+            : undefined,
+    };
 }
 
 export function isTuminMemoryTransportAvailable(): boolean {
