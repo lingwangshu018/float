@@ -4,6 +4,7 @@
 import { getChatPluginHookBus } from "../chat-plugin-hooks";
 import type { PromptSystemPayload } from "../chat-plugin-types";
 import { collectTuminExternalPromptContext } from "./prompt-context";
+import { publishBoundFloatMemorySnapshot } from "./snapshot-publisher";
 
 const PLUGIN_ID = "builtin.tumin-memory-bridge";
 const GLOBAL_DISPOSER_KEY = "__floatTuminMemoryPromptHookDisposer";
@@ -28,6 +29,9 @@ export function registerTuminMemoryPromptHook(): () => void {
         async (rawPayload) => {
             const payload = rawPayload as PromptSystemPayload;
             if (payload.isGroup || !payload.characterId) return payload;
+
+            // Reverse direction is cache-only and must never delay or block normal chat.
+            void publishBoundFloatMemorySnapshot(payload.characterId);
 
             const external = await collectTuminExternalPromptContext(payload.characterId);
             if (!external.combinedText) return payload;
