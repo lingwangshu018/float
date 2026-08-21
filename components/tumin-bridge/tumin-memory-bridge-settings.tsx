@@ -1,14 +1,21 @@
 "use client";
 
 import { useEffect, useState, type CSSProperties } from "react";
-import { Archive, Clock, Link2, Sparkles } from "lucide-react";
+import { Archive, Clock, Link2, Sparkles, Users } from "lucide-react";
 import { Toggle } from "@/components/ui/form";
+import { loadCharacters } from "@/lib/character-storage";
 import {
+    bindTuminAssistant,
     loadTuminMemoryBridgeConfig,
     saveTuminMemoryBridgeConfig,
+    unbindTuminAssistant,
     type TuminMemoryBridgeConfig,
 } from "@/lib/tumin-bridge/config";
-import { isTuminMemoryTransportAvailable } from "@/lib/tumin-bridge/transport";
+import {
+    isTuminMemoryTransportAvailable,
+    listTuminAssistants,
+    type TuminAssistantInfo,
+} from "@/lib/tumin-bridge/transport";
 import { BINDING_ACCENTS } from "@/lib/ui-accent-colors";
 
 const RECENT_CONTEXT_PRESETS = [5, 10, 20, 50] as const;
@@ -16,12 +23,28 @@ const RECENT_CONTEXT_PRESETS = [5, 10, 20, 50] as const;
 export function TuminMemoryBridgeSettings() {
     const [bridge, setBridge] = useState<TuminMemoryBridgeConfig>(loadTuminMemoryBridgeConfig);
     const [transportAvailable, setTransportAvailable] = useState(false);
+    const [tuminAssistants, setTuminAssistants] = useState<TuminAssistantInfo[]>([]);
+    const [loadingAssistants, setLoadingAssistants] = useState(false);
+    const floatCharacters = loadCharacters();
     const isPresetLimit = RECENT_CONTEXT_PRESETS.includes(
         bridge.sharedRecentContextLimit as (typeof RECENT_CONTEXT_PRESETS)[number],
     );
 
     useEffect(() => {
-        setTransportAvailable(isTuminMemoryTransportAvailable());
+        const available = isTuminMemoryTransportAvailable();
+        setTransportAvailable(available);
+        if (!available) return;
+
+        let cancelled = false;
+        setLoadingAssistants(true);
+        void listTuminAssistants()
+            .then(result => {
+                if (!cancelled && result.success) setTuminAssistants(result.assistants);
+            })
+            .finally(() => {
+                if (!cancelled) setLoadingAssistants(false);
+            });
+        return () => { cancelled = true; };
     }, []);
 
     const saveBridge = (patch: Partial<TuminMemoryBridgeConfig>) => {
@@ -33,6 +56,13 @@ export function TuminMemoryBridgeSettings() {
     const saveRecentLimit = (value: number) => {
         if (!Number.isFinite(value)) return;
         saveBridge({ sharedRecentContextLimit: Math.min(200, Math.max(1, Math.round(value))) });
+    };
+
+    const setCharacterBinding = (characterId: string, assistantId: string) => {
+        const next = assistantId
+            ? bindTuminAssistant(characterId, assistantId)
+            : unbindTuminAssistant(characterId);
+        setBridge(next);
     };
 
     const iconStyle = (color: string): CSSProperties => ({ "--icon-color": color } as CSSProperties);
@@ -64,6 +94,57 @@ export function TuminMemoryBridgeSettings() {
                         <span className="menu-desc">{transportAvailable ? "已连接" : "未连接"}</span>
                     </div>
                 </div>
+            </div>
+
+            <p className="menu-group-desc mx-2">角色绑定</p>
+            <div className="menu-group">
+                <div className="menu-item">
+                    <span className="card-icon" style={iconStyle(BINDING_ACCENTS.memory)}>
+                        <Users size={22} strokeWidth={1.75} />
+                    </span>
+                    <div className="menu-label-group">
+                        <span className="menu-label">float 角色 ↔ 兔眠助手</span>
+                        <span className="menu-desc">按稳定 ID 显式绑定，不会用同名角色自动猜测</span>
+                    </div>
+                </div>
+                {floatCharacters.length === 0 ? (
+                    <div className="menu-item">
+                        <div className="menu-label-group">
+                            <span className="menu-desc">暂无 float 角色可绑定</span>
+                        </div>
+                    </div>
+                ) : floatCharacters.map(character => (
+                    <div className="menu-item" key={character.id}>
+                        <div className="menu-label-group">
+                            <span className="menu-label">{character.name || "未命名角色"}</span>
+                            <span className="menu-desc">{bridge.characterBindings[character.id] ? "已绑定" : "未绑定"}</span>
+                        </div>
+                        <div className="menu-right" style={{ minWidth: 150 }}>
+                            <select
+                                className="ui-input"
+                                value={bridge.characterBindings[character.id] ?? ""}
+                                disabled={!transportAvailable || loadingAssistants}
+                                onChange={(event) => setCharacterBinding(character.id, event.target.value)}
+                                aria-label={`${character.name || "角色"}对应的兔眠助手`}
+                                style={{ width: 150 }}
+                            >
+                                <option value="">不绑定</option>
+                                {tuminAssistants.map(assistant => (
+                                    <option key={assistant.id} value={assistant.id}>
+                                        {assistant.name || assistant.id}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                ))}
+                {transportAvailable && loadingAssistants && (
+                    <div className="menu-item">
+                        <div className="menu-label-group">
+                            <span className="menu-desc">正在读取兔眠助手列表…</span>
+                        </div>
+                    </div>
+                )}
             </div>
 
             <p className="menu-group-desc mx-2">短期上下文</p>
