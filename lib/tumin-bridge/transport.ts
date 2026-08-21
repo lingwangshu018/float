@@ -1,6 +1,8 @@
 // Transport boundary for Float <-> Tumin memory interoperability.
 // This file knows about the host bridge, but not about Float's chat or memory internals.
 
+import { getBoundTuminAssistantId, loadTuminMemoryBridgeConfig } from "./config";
+
 export type TuminBridgeRecentItem = {
     id: string;
     origin: "tumin";
@@ -76,4 +78,33 @@ export async function readTuminLongTermMemory(
         };
     }
     return bridge.memoryGetLongTerm(assistantId, limit);
+}
+
+export async function readBoundTuminRecentMemory(
+    characterId: string,
+): Promise<TuminBridgeReadResult<TuminBridgeRecentItem>> {
+    const config = loadTuminMemoryBridgeConfig();
+    const assistantId = getBoundTuminAssistantId(characterId);
+    if (!config.enabled || !config.allowFloatReadTuminRecent) {
+        return { success: false, kind: "recent", assistantId: assistantId ?? undefined, items: [], error: "Tumin recent-memory reading is disabled" };
+    }
+    if (!assistantId) {
+        return { success: false, kind: "recent", items: [], error: "No Tumin assistant is bound to this Float character" };
+    }
+    return readTuminRecentMemory(assistantId, config.sharedRecentContextLimit);
+}
+
+export async function readBoundTuminLongTermMemory(
+    characterId: string,
+    limit = 200,
+): Promise<TuminBridgeReadResult<TuminBridgeLongTermItem>> {
+    const config = loadTuminMemoryBridgeConfig();
+    const assistantId = getBoundTuminAssistantId(characterId);
+    if (!config.enabled || !config.allowFloatReadTuminLongTerm) {
+        return { success: false, kind: "long_term", assistantId: assistantId ?? undefined, items: [], error: "Tumin long-term-memory reading is disabled" };
+    }
+    if (!assistantId) {
+        return { success: false, kind: "long_term", items: [], error: "No Tumin assistant is bound to this Float character" };
+    }
+    return readTuminLongTermMemory(assistantId, limit);
 }
