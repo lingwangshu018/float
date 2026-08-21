@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { Archive, Clock, Link2, Sparkles } from "lucide-react";
 import { Toggle } from "@/components/ui/form";
 import {
@@ -8,15 +8,21 @@ import {
     saveTuminMemoryBridgeConfig,
     type TuminMemoryBridgeConfig,
 } from "@/lib/tumin-bridge/config";
+import { isTuminMemoryTransportAvailable } from "@/lib/tumin-bridge/transport";
 import { BINDING_ACCENTS } from "@/lib/ui-accent-colors";
 
 const RECENT_CONTEXT_PRESETS = [5, 10, 20, 50] as const;
 
 export function TuminMemoryBridgeSettings() {
     const [bridge, setBridge] = useState<TuminMemoryBridgeConfig>(loadTuminMemoryBridgeConfig);
+    const [transportAvailable, setTransportAvailable] = useState(false);
     const isPresetLimit = RECENT_CONTEXT_PRESETS.includes(
         bridge.sharedRecentContextLimit as (typeof RECENT_CONTEXT_PRESETS)[number],
     );
+
+    useEffect(() => {
+        setTransportAvailable(isTuminMemoryTransportAvailable());
+    }, []);
 
     const saveBridge = (patch: Partial<TuminMemoryBridgeConfig>) => {
         const next = { ...bridge, ...patch };
@@ -45,6 +51,17 @@ export function TuminMemoryBridgeSettings() {
                     </div>
                     <div className="menu-right">
                         <Toggle checked={bridge.enabled} onChange={(value) => saveBridge({ enabled: value })} />
+                    </div>
+                </div>
+                <div className="menu-item">
+                    <div className="menu-label-group">
+                        <span className="menu-label">连接状态</span>
+                        <span className="menu-desc">
+                            {transportAvailable ? "已检测到兔眠宿主记忆桥" : "尚未检测到兔眠宿主记忆桥"}
+                        </span>
+                    </div>
+                    <div className="menu-right">
+                        <span className="menu-desc">{transportAvailable ? "已连接" : "未连接"}</span>
                     </div>
                 </div>
             </div>
