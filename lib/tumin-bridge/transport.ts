@@ -46,6 +46,9 @@ type TuminHostBridge = {
     memoryGetRecent?: (assistantId: string, limit?: number) => Promise<TuminBridgeReadResult<TuminBridgeRecentItem>>;
     memoryGetLongTerm?: (assistantId: string, limit?: number) => Promise<TuminBridgeReadResult<TuminBridgeLongTermItem>>;
     memoryListAssistants?: () => Promise<TuminAssistantListResult>;
+    /** Existing generic Tumin plugin KV API; used for reverse-direction snapshot cache. */
+    setData?: (key: string, value: string) => Promise<unknown>;
+    getData?: (key: string) => Promise<string | null>;
 };
 
 function getHostBridge(): TuminHostBridge | null {
@@ -56,6 +59,21 @@ function getHostBridge(): TuminHostBridge | null {
 export function isTuminMemoryTransportAvailable(): boolean {
     const bridge = getHostBridge();
     return Boolean(bridge?.memoryGetRecent || bridge?.memoryGetLongTerm || bridge?.memoryListAssistants);
+}
+
+export function isTuminPluginDataTransportAvailable(): boolean {
+    return Boolean(getHostBridge()?.setData);
+}
+
+export async function writeTuminPluginData(key: string, value: string): Promise<boolean> {
+    const bridge = getHostBridge();
+    if (!bridge?.setData) return false;
+    try {
+        await bridge.setData(key, value);
+        return true;
+    } catch {
+        return false;
+    }
 }
 
 export async function listTuminAssistants(): Promise<TuminAssistantListResult> {
